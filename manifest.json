@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/meilisearch/meilisearch/refs/heads/main/assets/meilisearch-logo-dark.svg",
         "versions": [
             {
+                "version": "1.11.1.6772",
+                "changelog": "- [b063884] fix: single search for all item types instead of iterating",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/chlohal/jellyfin-plugin-meilisearch/releases/download/1.11.1.6772/meilisearch_1.11.1.6772.zip",
+                "checksum": "a058f4bbd581be47fc3cb19e565ea3db",
+                "timestamp": "2026-02-21T22:28:09Z"
+            },
+            {
                 "version": "1.11.1.10",
                 "changelog": "- [2fad775] docs: Setup/usage instructions, clarify, provide examples (#92)\n- [a3c4ca9] ci(deps): bump actions/checkout from 6.0.1 to 6.0.2 (#90)\n- [b3cafe1] feat: add default search types when none specified (#73)\n- [66dc487] ci(deps): Bump actions/setup-dotnet from 5.0.1 to 5.1.0 (#87)\n- [79de4f9] chore: add VSCode configuration files for extensions and settings\n- [907251d] refactor: remove workaround for URL constructor in Meilisearch plugin\n- [a8b531e] chore: update .gitignore to include .vs/ directory",
                 "targetAbi": "10.11.0.0",
