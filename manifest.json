@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/meilisearch/meilisearch/refs/heads/main/assets/meilisearch-logo-dark.svg",
         "versions": [
             {
+                "version": "1.11.1.6773",
+                "changelog": "- [2d45691] fix: single search for all item types instead of iterating",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/chlohal/jellyfin-plugin-meilisearch/releases/download/1.11.1.6773/meilisearch_1.11.1.6773.zip",
+                "checksum": "1cd3e0576e580ed027d6b1574b8c070c",
+                "timestamp": "2026-02-21T23:38:03Z"
+            },
+            {
                 "version": "1.11.1.6772",
                 "changelog": "- [b063884] fix: single search for all item types instead of iterating",
                 "targetAbi": "10.11.0.0",
