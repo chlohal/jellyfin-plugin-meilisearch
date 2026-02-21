@@ -137,19 +137,19 @@ public class MeilisearchMutateFilter(
         {
             var additionQuery = additionalFilters.Select(it => $"{it.Key} = {it.Value}").ToList();
             var additionQueryStr = additionQuery.Count > 0 ? $" AND {string.Join(" AND ", additionQuery)}" : "";
-            foreach (var itemType in itemTypes)
-            {
-                var results = await index.SearchAsync<MeilisearchItem>(
-                    searchTerm,
-                    new SearchQuery
-                    {
-                        Filter = $"type = \"{itemType}\" {additionQueryStr}",
-                        Limit = limitPerType,
-                        AttributesToSearchOn = Plugin.Instance?.Configuration.AttributesToSearchOn
-                    }
-                );
-                items.AddRange(results.Hits);
-            }
+            var itemTypeFilter = itemTypes.Select(it => $"type = \"{it}\"").ToList();
+            var itemTypeFilterStr = itemTypes.Count > 0 ? $"({string.Join(" OR ", itemTypeFilter)})" : "";
+
+            var results = await index.SearchAsync<MeilisearchItem>(
+                searchTerm,
+                new SearchQuery
+                {
+                    Filter = $"${itemTypeFilterStr} {additionQueryStr}",
+                    Limit = limitPerType,
+                    AttributesToSearchOn = Plugin.Instance?.Configuration.AttributesToSearchOn
+                }
+            );
+            items.AddRange(results.Hits);
         }
         catch (MeilisearchCommunicationError e)
         {
