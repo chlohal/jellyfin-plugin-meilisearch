@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Jellyfin.Database.Implementations;
 using Jellyfin.Database.Implementations.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -9,18 +9,20 @@ namespace Jellyfin.Plugin.Meilisearch;
 public class EfCoreIndexer(
     IJellyfinDatabaseProvider dbProvider,
     MeilisearchClientHolder clientHolder,
-    ILogger<DbIndexer> logger
+    ILogger<EfCoreIndexer> logger
 ) : Indexer(clientHolder, logger)
 {
-    protected override async Task<ImmutableList<MeilisearchItem>> GetItems()
+    protected override async Task<ImmutableList<MeilisearchItem>> GetItems(IReadOnlySet<string> includedTypes)
     {
         using var context = dbProvider.DbContextFactory!.CreateDbContext();
-        Status["Database"] = context.Database.GetDbConnection().ConnectionString;
 
-        var entities = await context.BaseItems.AsNoTracking().ToListAsync();
+        var entities = await context.BaseItems
+            .AsNoTracking()
+            .Where(x => x.Type != null && includedTypes.Contains(x.Type))
+            .ToListAsync();
+
         return entities.Select(ToMeilisearchItem).ToImmutableList();
     }
-
 
     private static MeilisearchItem ToMeilisearchItem(BaseItemEntity item)
     {
@@ -37,12 +39,13 @@ public class EfCoreIndexer(
             Tags: item.Tags?.Split('|'),
             CommunityRating: item.CommunityRating,
             ProductionYear: item.ProductionYear,
-            Path: item.Path?[0] == '%' ? null : item.Path,
+            Path: string.IsNullOrEmpty(item.Path) || item.Path[0] != '%' ? item.Path : null,
             Artists: item.Artists?.Split('|'),
             AlbumArtists: item.AlbumArtists?.Split('|'),
             CriticRating: item.CriticRating,
             IsFolder: item.IsFolder,
-            Tagline: item.Tagline
+            Tagline: item.Tagline,
+            SortName: item.SortName
         );
     }
 }

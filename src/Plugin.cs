@@ -3,7 +3,6 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -15,16 +14,32 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
     private readonly MeilisearchClientHolder _clientHolder;
     private readonly ILogger<Plugin> _logger;
     public readonly Indexer Indexer;
-    public long AverageSearchTime;
+
+    private readonly object _avgLock = new();
+    private double _averageSearchTime;
+    private bool _hasSearchTime;
+
+    /// <summary>
+    /// Exponential moving average of recent search durations, in milliseconds.
+    /// The most recent sample is weighted at 50%; this is a smoothed figure, not a mean over all searches.
+    /// </summary>
+    public long AverageSearchTime
+    {
+        get
+        {
+            lock (_avgLock)
+            {
+                return (long)Math.Round(_averageSearchTime);
+            }
+        }
+    }
 
     public Plugin(
         IApplicationPaths applicationPaths,
         IXmlSerializer xmlSerializer,
         ILogger<Plugin> logger,
-        IServiceProvider serviceProvider,
         MeilisearchClientHolder clientHolder,
         Indexer indexer,
-        IActionDescriptorCollectionProvider provider,
         IHostApplicationLifetime hostApplicationLifetime
     ) : base(
         applicationPaths,
@@ -42,7 +57,6 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
         };
 
         hostApplicationLifetime.ApplicationStarted.Register(() => { _ = TryCreateMeilisearchClient(false); });
-        hostApplicationLifetime.ApplicationStarted.Register(() => { TryAddFilter(provider, serviceProvider); });
     }
 
     private EventHandler<BasePluginConfiguration> ReloadMeilisearch { get; }
@@ -65,24 +79,13 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
         ];
     }
 
-    private void TryAddFilter(IActionDescriptorCollectionProvider provider, IServiceProvider serviceProvider)
-    {
-        // I guess this would work purely because this is a plugin and is loaded after ItemsController
-        var count = provider.AddDynamicFilter<MeilisearchMutateFilter>(serviceProvider, t =>
-        {
-            var sig = $"{t.ControllerTypeInfo.FullName}#{t.MethodInfo.Name}";
-            if (Configuration.Debug) Console.WriteLine($"\tmethod: {sig}");
-
-            return sig == "Jellyfin.Api.Controllers.ItemsController#GetItems";
-        });
-        _logger.LogInformation("Added {Count} action filters", count);
-    }
-
     public override void UpdateConfiguration(BasePluginConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         var config = (Config)configuration;
-        var skipReload = Configuration.Url == config.Url && Configuration.ApiKey == config.ApiKey;
+        var skipReload = Configuration.Url == config.Url
+                         && Configuration.ApiKey == config.ApiKey
+                         && Configuration.IndexName == config.IndexName;
 
         Configuration = config;
         SaveConfiguration(Configuration);
@@ -91,25 +94,41 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
             ReloadMeilisearch.Invoke(this, configuration);
     }
 
-    private volatile Task? _updatingTask;
+    private readonly object _updatingTaskLock = new();
+    private Task? _updatingTask;
 
     public async Task TryCreateMeilisearchClient(bool join = true)
     {
-        if (_updatingTask != null)
+        Task? task;
+        bool startedNew;
+        lock (_updatingTaskLock)
+        {
+            startedNew = _updatingTask == null;
+            if (startedNew)
+            {
+                _updatingTask = _TryCreateMeilisearchClient();
+            }
+
+            task = _updatingTask;
+        }
+
+        if (!startedNew)
         {
             _logger.LogWarning("Meilisearch client configuration is still updating，skipping");
-            if (join) await _updatingTask;
+            if (join) await task!;
             return;
         }
 
         try
         {
-            _updatingTask = _TryCreateMeilisearchClient();
-            await _updatingTask;
+            await task!;
         }
         finally
         {
-            _updatingTask = null;
+            lock (_updatingTaskLock)
+            {
+                _updatingTask = null;
+            }
         }
     }
 
@@ -120,12 +139,14 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
     }
 
 
-    public void UpdateAverageSearchTime(long averageSearchTime)
+    public void UpdateAverageSearchTime(long searchTime)
     {
-        lock (this)
+        lock (_avgLock)
         {
-            if (AverageSearchTime == 0) AverageSearchTime = averageSearchTime;
-            AverageSearchTime = (averageSearchTime + AverageSearchTime) / 2;
+            _averageSearchTime = _hasSearchTime
+                ? (searchTime + _averageSearchTime) / 2
+                : searchTime;
+            _hasSearchTime = true;
         }
     }
 }
