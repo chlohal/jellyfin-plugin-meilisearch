@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/meilisearch/meilisearch/refs/heads/main/assets/meilisearch-logo-dark.svg",
         "versions": [
             {
+                "version": "1.12.10.0",
+                "changelog": "\n- [8b8a90e] fix circular reliance on tags\n- [306da9d] Fix warning",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/chlohal/jellyfin-plugin-meilisearch/releases/download/1.12.10/meilisearch_1.12.10.0.zip",
+                "checksum": "aefeb8071e95cba2809c6e7c9f09b568",
+                "timestamp": "2026-10-09T23:37:55Z"
+            },
+            {
                 "version": "1.12.6.0",
                 "changelog": "\n- [ff75898] Add semantic seach option\n- [2988c00] Update from upstream\n- [85ae32d] ci(deps): bump actions/checkout from 7.0.0 to 7.0.1 (#135)\n- [531da07] ci(deps): bump actions/setup-dotnet from 5.4.0 to 6.0.0 (#136)\n- [1dd1a59] update README\n- [9cc9ebb] Merge branch 'main' into main\n- [112b1f7] Merge upstream suggestions (correct division issue)\n- [af4fa59] Fix limit parameter to use query limit directly instead of dividing and multiplying again.\n- [5d8541e] Update src/MeilisearchMutateFilter.cs\n- [66a1dcb] Update src/MeilisearchMutateFilter.cs\n- [9b9edcb] Update src/MeilisearchMutateFilter.cs\n- [2d45691] fix: single search for all item types instead of iterating",
                 "targetAbi": "12.0.0.0",
