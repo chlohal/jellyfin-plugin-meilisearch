@@ -6,6 +6,10 @@ on:
       - '*'
   workflow_dispatch:
     inputs:
+      release-version:
+        required: true
+        description: "The version of the plugin to release"
+        type: string
       dotnet-version:
         required: false
         default: "10.0.x"
@@ -33,9 +37,9 @@ jobs:
 
       - name: Update build.yaml
         run: |-
-          echo "set version to ${GITHUB_REF#refs/tags/}"
-          sed -i "s/version: .*/version: '${GITHUB_REF#refs/tags/}'/" ./src/build.yaml
-          
+          echo "set version to ${{inputs.release-version}}"
+          sed -i "s/version: .*/version: '${{ inputs.release-version }}'/" ./src/build.yaml
+
           COMMIT_RANGE=$(git describe --tags --abbrev=0 @^)..@
           echo "generate changelog for commit range ${COMMIT_RANGE}"
           CHANGELOG=$(git log "$COMMIT_RANGE" --oneline --pretty=format:"- [%h] %s")
@@ -85,6 +89,7 @@ jobs:
         uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         with:
           artifacts: ./*
+          tag: "${{ inputs.release-version }}"
           bodyFile: /tmp/changelog.md
 
   publish:
@@ -111,13 +116,13 @@ jobs:
           echo "::group::Installing JPRM"
           python3 -m pip install jprm
           echo "::endgroup::"
-          
+
           RELEASE_TAG="${GITHUB_REF#refs/tags/}"
           echo "set release tag to ${RELEASE_TAG}, get release info..."
           RELEASE_INFO=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/tags/${RELEASE_TAG}")
           DOWNLOAD_URL=$(echo "$RELEASE_INFO" | jq -r '.assets[] | select(.name | test("\\.zip$")) | .browser_download_url')
           echo "download url: ${DOWNLOAD_URL}"
-          
+
           echo "::group::Updating manifest.json"
           jprm repo add ./manifest.json "$(ls -d *.zip)" -u "${DOWNLOAD_URL}" -U "${DOWNLOAD_URL}"
           echo "::endgroup::"
