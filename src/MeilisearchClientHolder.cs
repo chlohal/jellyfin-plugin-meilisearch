@@ -21,6 +21,8 @@ public class MeilisearchClientHolder(ILogger<MeilisearchClientHolder> logger, IS
     public Index? Index { get; private set; }
     public MeilisearchClient? Client { get; private set; }
 
+    public string EmbedderName { get; private set; }
+
     public Task? Call(Func<MeilisearchClient, Index, Task> func)
         => Call(async (client, index) =>
         {
@@ -77,6 +79,7 @@ public class MeilisearchClientHolder(ILogger<MeilisearchClientHolder> logger, IS
                 : envURL;
             Client = new MeilisearchClient(url, apiKey);
             Index = await GetIndex(Client, configuration.IndexName).ConfigureAwait(false);
+            EmbedderName = configuration.EmbedderName;
             await UpdateMeilisearchHealthAsync().ConfigureAwait(false);
         }
         catch (Exception e)

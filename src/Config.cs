@@ -10,6 +10,7 @@ public class Config : BasePluginConfiguration
         Url = string.Empty;
         Debug = false;
         IndexName = string.Empty;
+        EmbedderName = string.Empty;
         MatchingStrategy = "last";
     }
 
@@ -18,6 +19,7 @@ public class Config : BasePluginConfiguration
 
     public bool Debug { get; set; }
     public string IndexName { get; set; }
+    public string EmbedderName {get; set; }
 
     /// <summary>
     /// Meilisearch matchingStrategy: "last", "all", or "frequency".

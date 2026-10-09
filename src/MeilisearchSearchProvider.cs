@@ -99,6 +99,10 @@ public class MeilisearchSearchProvider : IExternalSearchProvider
         {
             Filter = filter,
             Limit = limit,
+            Hybrid = string.IsNullOrEmpty(_clientHolder.EmbedderName) ? null : new HybridSearch {
+                Embedder = _clientHolder.EmbedderName,
+                SemanticRatio = 0.5f,
+            },
             AttributesToRetrieve = ["guid"],
             ShowRankingScore = true,
             MatchingStrategy = matchingStrategy,

@@ -83,6 +83,11 @@
                     <div class="fieldDescription">Default to server friendly name.</div>
                 </div>
                 <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="IndexName">Meilisearch Embedder Name</label>
+                    <input id="EmbedderName" is="emby-input" name="EmbedderName" type="text"/>
+                    <div class="fieldDescription">Use a hybrid search embedder when searching in Meilisearch</div>
+                </div>
+                <div class="inputContainer">
                     <label class="inputLabel inputLabelUnfocused" for="MatchingStrategy">Matching Strategy</label>
                     <select id="MatchingStrategy" is="emby-select" name="MatchingStrategy">
                         <option value="last">last (default — return results with most keywords matched)</option>
@@ -158,6 +163,7 @@
                         document.querySelector('#ApiKey').value = config.ApiKey;
                         document.querySelector('#Debug').checked = config.Debug;
                         document.querySelector('#IndexName').value = config.IndexName;
+                        document.querySelector('#EmbedderName').value = config.EmbedderName;
                         document.querySelector('#MatchingStrategy').value = config.MatchingStrategy || 'last';
                         Dashboard.hideLoadingMsg();
                     });
@@ -172,6 +178,7 @@
                         config.ApiKey = document.querySelector('#ApiKey').value;
                         config.Debug = document.querySelector('#Debug').checked;
                         config.IndexName = document.querySelector('#IndexName').value;
+                        config.EmbedderName = document.querySelector('#EmbedderName').value;
                         config.MatchingStrategy = document.querySelector('#MatchingStrategy').value;
                         ApiClient.updatePluginConfiguration(id, config).then(result => {
                             Dashboard.processPluginConfigurationUpdateResult(result);

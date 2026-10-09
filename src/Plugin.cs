@@ -85,7 +85,8 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
         var config = (Config)configuration;
         var skipReload = Configuration.Url == config.Url
                          && Configuration.ApiKey == config.ApiKey
-                         && Configuration.IndexName == config.IndexName;
+                         && Configuration.IndexName == config.IndexName
+                         && Configuration.EmbedderName == config.EmbedderName;
 
         Configuration = config;
         SaveConfiguration(Configuration);
