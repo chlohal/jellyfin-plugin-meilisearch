@@ -79,7 +79,7 @@ public class MeilisearchClientHolder(ILogger<MeilisearchClientHolder> logger, IS
                 : envURL;
             Client = new MeilisearchClient(url, apiKey);
             Index = await GetIndex(Client, configuration.IndexName).ConfigureAwait(false);
-            EmbedderName = configuration.EmbedderName;
+            EmbedderName = string.IsNullOrEmpty(configuration.EmbedderName) ? string.Empty : configuration.EmbedderName;
             await UpdateMeilisearchHealthAsync().ConfigureAwait(false);
         }
         catch (Exception e)
